@@ -23,7 +23,7 @@ def get_customer(customer_id):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('customer-data-int')
     response = table.query(
-        KeyConditionExpression = Key("customer_id").eq(customer_id)
+        KeyConditionExpression = Key("customer_id").eq(int(customer_id))
     )
 
     if response.get("Count") == 0:
@@ -40,17 +40,17 @@ def update_customer(customer_id):
     table = dynamodb.Table('customer-data-int')
 
     response = table.query(
-        KeyConditionExpression = Key("customer_id").eq(customer_id)
+        KeyConditionExpression = Key("customer_id").eq(int(customer_id))
     )
 
     if response.get("Count") == 0:
         return f"customer not found with id {customer_id}", 404
 
     update_expression = "set " +  ",".join([f"{key}=:{key}" for key in request_body])
-    expression_attribute_values = {f":{key}": value  for key, value in request_body}
+    expression_attribute_values = {f":{key}": request_body[key]  for key in request_body}
 
     response = table.update_item(
-        Key={"customer_id": customer_id},
+        Key={"customer_id": int(customer_id)},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ReturnValues="UPDATED_NEW",
@@ -79,6 +79,6 @@ def delete_customer(customer_id):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('customer-data-int')
 
-    table.delete_item(Key={"customer_id": customer_id})
+    table.delete_item(Key={"customer_id": int(customer_id)})
     
     return {"message": "success"}
